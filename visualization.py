@@ -6,6 +6,8 @@ import string
 import requests
 import shutil
 
+from models.uml2 import TransitionTypeEnum
+
 def img_request(url, filename):
     r = requests.get(url, stream=True)
     if r.status_code == 200:
@@ -34,6 +36,19 @@ def io_automata_viz(automat, filename):
     img_request(plantuml_url, filename)
     return plantuml_url
     
+def uml_viz(uml, filename):
+    #plant uml viz
+    command = '@startuml\nhide empty description\n'
+    command+=f"[*] -> {uml.states[0].label}\n"
+    for t in uml.transitions:
+        trans_label = f"{t.action} /" if t.type == TransitionTypeEnum.action else f"/ return {t.return_value}"
+        line = f'{t.pre_state} -> {t.post_state} : {trans_label}\n'
+        command += line
+    command+='@enduml\n\n'
+    
+    plantuml_url = f"https://www.plantuml.com/plantuml/png/{plantuml_encode(command)}"
+    img_request(plantuml_url, filename)
+    return plantuml_url
 
 # encoding decoding code from ryardley
 # https://gist.github.com/ryardley/88001f6822975ece088d41768431f5d6

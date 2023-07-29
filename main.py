@@ -1,5 +1,6 @@
 from transformations import *
 from transformations.generate_io_automata import GenerateIOAutomata
+from transformations.io_automata_to_integrated_uml2 import IO2UML
 import os
 import sys
 
@@ -13,6 +14,7 @@ if __name__ == "__main__":
     behaviors = BehaviorExtraction(projection).transform()
     io_automata = GenerateIOAutomata(behaviors).io_automata()
 
+    '''
     with open(os.path.join(artefacts, "behavior.txt"), "w") as file:
         original_stdout = sys.stdout
         sys.stdout = file
@@ -47,5 +49,10 @@ if __name__ == "__main__":
     # visualize
     for obj, automat in io_automata.items():
         io_automata_viz(automat, f"artefacts/{obj}_io_automat.png")
-        
+    '''
+
+    uml = IO2UML(io_automata["atm"]).io_2_uml()
+    print(uml)
+    from visualization import uml_viz
+    print(uml_viz(uml, f"artefacts/atm_uml.png"))
     
