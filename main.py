@@ -13,5 +13,5 @@ if __name__ == "__main__":
     projection = ObjectProjection(interaction_table).transform()
     behaviors = BehaviorExtraction(projection).transform()
     io_automata = GenerateIOAutomata(behaviors).io_automata()
-    uml = IO2UML(io_automata["atm"]).visualize_uml()
+    uml = IO2UML("atm", io_automata["atm"]).visualize_uml()
 
