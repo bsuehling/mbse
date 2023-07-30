@@ -51,7 +51,7 @@ class IO2UML:
                     # We assume that the check only happens (if ever) in the first message-out
                     # TODO: We assumed that the first message_outs in "similar" transitions have the same operation and receiver
                     # TODO: We also assumed that when there are similar transitions, then there is at least one outgoing message
-                    
+
                     first_message = io_similar_transitions[0].messages_out[0]
                     check = BlockLabelElement(
                         operation=first_message.operation,
@@ -74,6 +74,10 @@ class IO2UML:
                     # print(io_similar_transitions_copy)
                     for similar_transition in io_similar_transitions_copy:
                         operations: List[BlockLabelElement] = []
+                        operations.append(BlockLabelElement(
+                            operation="None" if similar_transition.return_value == None else similar_transition.return_value,
+                            receiver=""
+                        ))
                         for message_out in similar_transition.messages_out[1:]:
                             operations.append(BlockLabelElement(
                                 operation=message_out.operation,
