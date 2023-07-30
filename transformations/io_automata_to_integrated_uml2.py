@@ -9,7 +9,8 @@ from models.uml2 import *
 
 
 class IO2UML:
-    def __init__(self, obj, input: IOautomat):
+    def __init__(self, obj, input: IOautomat, initial_states: List[str]):
+        self.initial_states = initial_states
         self.io_automat = input
         self.obj = obj
         self.state_machine = self._io_2_state_machine()
@@ -213,6 +214,11 @@ class IO2UML:
                 plant_uml += f"rectangle {state.label}\n"
             else:
                 plant_uml += f"hexagon {state.label}\n"
+        
+        plant_uml += "circle entry\n"
+        for s in self.initial_states:
+            plant_uml += f"entry -> {s}\n"
+
         for transition in self.state_machine.transitions:
             arrow = (
                 "-->"

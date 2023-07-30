@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 import os
 
 from transformations import *
@@ -13,10 +15,19 @@ if __name__ == "__main__":
     interaction_table = XMLToTable(input_file).transform()
     projection = ObjectProjection(interaction_table).transform()
     behaviors = BehaviorExtraction(projection).transform()
+
+    initial_states: Dict[str, List[str]] = {}
+    
+    for obj, scenario in behaviors.items():
+        init = []
+        for _, beh in scenario.items():
+            init.append(beh[0].pre_state)
+        initial_states.update({obj: list(set(init))})
+    
     io_automata = GenerateIOAutomata(behaviors).io_automata()
 
     for obj, automat in io_automata.items():
-        uml = IO2UML(obj, io_automata[obj])
+        uml = IO2UML(obj, io_automata[obj], initial_states[obj])
         os.makedirs(f"{artefacts}/{obj}", exist_ok=True)
         uml.visualize_uml(f"{artefacts}/{obj}")
         uml.visualize_composite_state_state_machines(f"{artefacts}/{obj}")

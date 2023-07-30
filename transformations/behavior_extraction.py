@@ -15,6 +15,7 @@ class BehaviorExtraction:
     """
 
     def __init__(self, input: Dict[str, Dict[str, List[Interaction]]]):
+        
         self._input = input
 
         self._behaviors: Dict[str, Dict[str, Behavior]] = {}
@@ -47,5 +48,5 @@ class BehaviorExtraction:
                 behavior.append(behavior_block)
                 behaviors[scenario] = behavior
             self._behaviors[obj] = behaviors
-
+        
         return self._behaviors
