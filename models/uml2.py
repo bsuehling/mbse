@@ -15,6 +15,9 @@ class TransitionTypeEnum(str, Enum):
 class State(BaseModel):
     label: str
     type: StateTypeEnum
+
+    def __eq__(self, other):
+        return self.label == other.label and self.type == other.type
     
 class Transition(BaseModel):
     pre_state: str
