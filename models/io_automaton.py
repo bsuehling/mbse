@@ -1,7 +1,9 @@
 from typing import List, Optional
 
 from pydantic import BaseModel
+
 from models.behavior import OutMessage
+
 
 class Transition(BaseModel):
     pre_state: str
@@ -10,6 +12,7 @@ class Transition(BaseModel):
     messages_out: List[OutMessage]
     return_value: Optional[str]
 
-class IOautomat(BaseModel):
+
+class IOAutomaton(BaseModel):
     states: List[str]
     transitions: List[Transition]

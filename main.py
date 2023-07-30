@@ -1,19 +1,18 @@
-from transformations import *
-from transformations.generate_io_automata import GenerateIOAutomata
 import os
 import sys
 
+from transformations import *
+
 if __name__ == "__main__":
     input_file = "./input/MDD_Model.xml"
-    artefacts = "artefacts"
-    if not os.path.exists(artefacts):
-        os.makedirs(artefacts)
+    artifacts = "artifacts"
+    os.makedirs(artifacts, exist_ok=True)
     interaction_table = XMLToTable(input_file).transform()
     projection = ObjectProjection(interaction_table).transform()
     behaviors = BehaviorExtraction(projection).transform()
     io_automata = GenerateIOAutomata(behaviors).io_automata()
 
-    with open(os.path.join(artefacts, "behavior.txt"), "w") as file:
+    with open(os.path.join(artifacts, "behavior.txt"), "w") as file:
         original_stdout = sys.stdout
         sys.stdout = file
         for obj, behavior in behaviors.items():
@@ -25,13 +24,13 @@ if __name__ == "__main__":
             print("-" * 100)
         sys.stdout = original_stdout
 
-    with open(os.path.join(artefacts, "io_automata.txt"), "w") as file:
+    with open(os.path.join(artifacts, "io_automata.txt"), "w") as file:
         original_stdout = sys.stdout
         sys.stdout = file
-        for obj, automat in io_automata.items():
+        for obj, automaton in io_automata.items():
             print(f"{obj}:")
-            print(f"states: {automat.states}")
-            for t in automat.transitions:
+            print(f"states: {automaton.states}")
+            for t in automaton.transitions:
                 print(f"\tpre_state: {t.pre_state}")
                 print(f"\tpost_state: {t.post_state}")
                 print(f"\tmessage_in: {t.message_in}")
@@ -43,9 +42,7 @@ if __name__ == "__main__":
         sys.stdout = original_stdout
 
     from visualization import io_automata_viz
-    
+
     # visualize
-    for obj, automat in io_automata.items():
-        io_automata_viz(automat, f"artefacts/{obj}_io_automat.png")
-        
-    
+    for obj, automaton in io_automata.items():
+        io_automata_viz(automaton, f"artifacts/{obj}_io_automaton.png")

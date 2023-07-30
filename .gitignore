@@ -1,3 +1,5 @@
 env/*
 *.pyc
+artifacts/*
+# for legacy reasons:
 artefacts/*
