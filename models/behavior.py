@@ -9,8 +9,12 @@ class OutMessage(BaseModel):
     return_value: Optional[str]
 
     def __eq__(self, other):
-        return self.operation == other.operation and \
-            self.receiver == other.receiver and self.return_value == other.return_value
+        return (
+            self.operation == other.operation
+            and self.receiver == other.receiver
+            and self.return_value == other.return_value
+        )
+
 
 class BehaviorBlock(BaseModel):
     pre_state: str
