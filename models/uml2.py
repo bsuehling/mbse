@@ -42,6 +42,7 @@ class Transition(BaseModel):
     type: TransitionTypeEnum
     action: str
     return_value: Optional[str]
+    exit_id: Optional[int]
 
 class StateMachine(BaseModel):
     states: List[State]

@@ -68,7 +68,11 @@ class IO2UML:
                     blocks.append(initial_block)    
 
                     output_counter = 1
-                    for similar_transition in io_similar_transitions:
+                    io_similar_transitions_copy = io_similar_transitions.copy()
+                    # print("io copy")
+                    io_similar_transitions_copy.sort(key = lambda x: x.post_state)
+                    # print(io_similar_transitions_copy)
+                    for similar_transition in io_similar_transitions_copy:
                         operations: List[BlockLabelElement] = []
                         for message_out in similar_transition.messages_out[1:]:
                             operations.append(BlockLabelElement(
@@ -104,31 +108,43 @@ class IO2UML:
         states = []
         for state in iostates:
             states.append(SimpleState(label = state))
+        
         transitions = []
-        for transition in iotransitions:
-            action = transition.message_in
+        iotransitions_copy = iotransitions.copy()
+        iotransitions_copy.sort(key = lambda x: x.post_state)
+        
+        for state in iostates:
+            for msg_in in self._io_incoming_messages(state):
+                ctr = 1
+                for transition in iotransitions_copy:
+                    if state != transition.pre_state or transition.message_in != msg_in:
+                        continue
+                    action = transition.message_in
 
-            composite_state = CompositeState(label=action, parent=transition.pre_state)
-            #if not composite_state in states:
-            #    states.append(composite_state)
+                    composite_state = CompositeState(label=action, parent=transition.pre_state)
+                    #if not composite_state in states:
+                    #    states.append(composite_state)
 
-            states.append(composite_state)
+                    states.append(composite_state)
 
-            transitions.append(Transition(
-                pre_state=transition.pre_state,
-                post_state=action,
-                type=TransitionTypeEnum.action,
-                action=action,
-                return_value=None
-            ))
+                    transitions.append(Transition(
+                        pre_state=transition.pre_state,
+                        post_state=action,
+                        type=TransitionTypeEnum.action,
+                        action=action,
+                        return_value=None,
+                        exit_id=None
+                    ))
 
-            transitions.append(Transition(
-                pre_state=action,
-                post_state=transition.post_state,
-                type=TransitionTypeEnum.ret,
-                action="",
-                return_value=transition.return_value
-            ))
+                    transitions.append(Transition(
+                        pre_state=action,
+                        post_state=transition.post_state,
+                        type=TransitionTypeEnum.ret,
+                        action="",
+                        return_value=transition.return_value,
+                        exit_id=ctr
+                    ))
+                    ctr += 1
 
         return StateMachine(
             states=states,
@@ -146,13 +162,14 @@ class IO2UML:
             else:
                 plant_uml += f"hexagon {state.label}\n"
         for transition in self.state_machine.transitions:
-            print(transition.pre_state)
+            # print(transition.pre_state)
             # print(self.state_machine.states)
-            print(([state for state in self.state_machine.states if state.label == transition.pre_state]))
+            # print(([state for state in self.state_machine.states if state.label == transition.pre_state]))
             arrow = "-->" if self.get_state(transition.pre_state).type == StateTypeEnum.simple else "+-->"
             return_value = transition.return_value if transition.return_value is not None \
                 else "return void" if transition.action == "" else ""
-            plant_uml += f"{transition.pre_state} {arrow} {transition.post_state} : {transition.action} / {return_value}\n"
+            exit_id = "" if transition.exit_id == None else f"exit{transition.exit_id} "
+            plant_uml += f"{transition.pre_state} {arrow} {transition.post_state} : {exit_id}{transition.action} / {return_value}\n"
         plant_uml += "@enduml"
         return plant_uml
 
