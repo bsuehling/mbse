@@ -47,8 +47,16 @@ class StateMachine(BaseModel):
     states: List[State]
     transitions: List[Transition]
 
+class BlockLabelElement(BaseModel):
+    operation: str
+    receiver: str
+
+class BlockLabel(BaseModel):
+    is_check: bool
+    elems: List[BlockLabelElement]
+    
 class Block(BaseModel):
-    label: str
+    label: BlockLabel
     is_input: bool
     output_ids: List[int]
 

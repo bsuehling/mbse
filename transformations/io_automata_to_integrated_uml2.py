@@ -33,11 +33,17 @@ class IO2UML:
                 block_transitions = []
                 if len(io_similar_transitions) == 1:
                     transition= io_similar_transitions[0]
-                    operations = "" # TODO: Try to extract a function for this
+                    operations: List[BlockLabelElement] = [] # TODO: Try to extract a function for this
                     for message_out in transition.messages_out:
-                        operations += f"{message_out.receiver}_{message_out.operation}_"
+                        operations.append(BlockLabelElement(
+                            operation=message_out.operation,
+                            receiver=message_out.receiver
+                        ))
                     blocks.append(Block(
-                        label = f"do_{operations}",
+                        label = BlockLabel(
+                            is_check=False,
+                            elems=operations
+                        ),
                         is_input = True,
                         output_ids = [1]
                     ))
@@ -45,21 +51,35 @@ class IO2UML:
                     # We assume that the check only happens (if ever) in the first message-out
                     # TODO: We assumed that the first message_outs in "similar" transitions have the same operation and receiver
                     # TODO: We also assumed that when there are similar transitions, then there is at least one outgoing message
+                    
                     first_message = io_similar_transitions[0].messages_out[0]
-                    check = f"check_{first_message.receiver}_{first_message.operation}"
+                    check = BlockLabelElement(
+                        operation=first_message.operation,
+                        receiver=first_message.receiver
+                    )
                     initial_block = Block(
-                        label = f"do_{check}",
+                        label = BlockLabel(
+                            is_check=True,
+                            elems=[check]
+                        ),
                         is_input = True,
                         output_ids = []
                     )
-                    blocks.append(initial_block)
+                    blocks.append(initial_block)    
+
                     output_counter = 1
                     for similar_transition in io_similar_transitions:
-                        operations = ""
+                        operations: List[BlockLabelElement] = []
                         for message_out in similar_transition.messages_out[1:]:
-                            operations += f"{message_out.receiver}_{message_out.operation}_"
+                            operations.append(BlockLabelElement(
+                                operation=message_out.operation,
+                                receiver=message_out.receiver
+                            ))
                         intermediate_block = Block(
-                            label = f"do_{operations}",
+                            label = BlockLabel(
+                                is_check=False,
+                                elems=operations
+                            ),
                             is_input = False,
                             output_ids = [output_counter]
                         )
@@ -67,7 +87,7 @@ class IO2UML:
                         block_transitions.append(BlockTransition(
                             from_block = initial_block,
                             to_block = intermediate_block,
-                            check = f"[check_{similar_transition.messages_out[0].return_value}]"
+                            check = f"{similar_transition.messages_out[0].return_value}"
                         ))
                         blocks.append(intermediate_block)
                 state_machines.append(CompositeStateStateMachine(
@@ -143,20 +163,31 @@ class IO2UML:
             file.write(uml_text)
         self.plantUML_server.processes_file(output_path)
 
+    def blockLabel2str(self, blockLabel: BlockLabel):
+        elems = blockLabel.elems
+        if blockLabel.is_check:
+            return f"do_check_{elems[0].receiver}_{elems[0].operation}"
+        else:
+            ans = "do"
+            for e in elems:
+                ans+=f"_{e.receiver}_{e.operation}"
+            return ans
+
     def generate_composite_plant_uml(self, machine):
         plant_uml = "@startuml\n"
+        print(machine)
         plant_uml += f'state {machine.label} {{\n'
         plant_uml += "state entry <<entryPoint>>\n"
         for block in machine.blocks:
-            plant_uml += f'state {block.label}\n'
+            plant_uml += f'state {self.blockLabel2str(block.label)}\n'
             if len(block.output_ids) == 1: # We assume that a state doesn't return more than one value
                 plant_uml += f"state exit{block.output_ids[0]} <<exitPoint>>\n"
-                plant_uml += f'{block.label} -> exit{block.output_ids[0]}\n'
+                plant_uml += f'{self.blockLabel2str(block.label)} -> exit{block.output_ids[0]}\n'
             if block.is_input:
-                plant_uml += f'entry -> {block.label}\n'
+                plant_uml += f'entry -> {self.blockLabel2str(block.label)}\n'
         plant_uml += "}\n"
         for transition in machine.transitions:
-            plant_uml += f'{transition.from_block.label} --> {transition.to_block.label} : {transition.check}\n'
+            plant_uml += f'{self.blockLabel2str(transition.from_block.label)} --> {self.blockLabel2str(transition.to_block.label)} : {transition.check}\n'
         plant_uml += "@enduml"
         print(plant_uml)
         return plant_uml
