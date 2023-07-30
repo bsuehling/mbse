@@ -48,6 +48,9 @@ class GenerateIOAutomata:
                         break
                 if not _changed:
                     _transitions = [head] + _transitions
+            # Remove duplicate OutMessages
+            for transition in _transitions:
+                transition.messages_out = [item for idx, item in enumerate(transition.messages_out) if item not in transition.messages_out[:idx]]
             _io_automata_final.update({obj: IOautomat(
                 states=_states,
                 transitions=_transitions
