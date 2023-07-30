@@ -11,7 +11,7 @@ class IO2UML:
         self.io_automat = input
         self.obj = obj
         self.state_machine = self._io_2_state_machine()
-        # self.composite_state_state_machines = self._io_to_composite_state_state_machines()
+        self.composite_state_state_machines = self._io_to_composite_state_state_machines()
         self.plantUML_server =  PlantUML(url='http://www.plantuml.com/plantuml/img/')
 
     def _io_incoming_messages(self, state):
@@ -35,9 +35,9 @@ class IO2UML:
                     transition= io_similar_transitions[0]
                     operations = "" # TODO: Try to extract a function for this
                     for message_out in transition.messages_out:
-                        operations += f"{message_out.receiver}.{message_out.operation}; "
+                        operations += f"{message_out.receiver}_{message_out.operation}_"
                     blocks.append(Block(
-                        label = f"do / {operations}",
+                        label = f"do_{operations}",
                         is_input = True,
                         output_ids = [1]
                     ))
@@ -46,9 +46,9 @@ class IO2UML:
                     # TODO: We assumed that the first message_outs in "similar" transitions have the same operation and receiver
                     # TODO: We also assumed that when there are similar transitions, then there is at least one outgoing message
                     first_message = io_similar_transitions[0].messages_out[0]
-                    check = f"check := {first_message.receiver}.{first_message.operation}"
+                    check = f"check_{first_message.receiver}_{first_message.operation}"
                     initial_block = Block(
-                        label = f"do / {check}",
+                        label = f"do_{check}",
                         is_input = True,
                         output_ids = []
                     )
@@ -57,9 +57,9 @@ class IO2UML:
                     for similar_transition in io_similar_transitions:
                         operations = ""
                         for message_out in similar_transition.messages_out[1:]:
-                            operations += f"{message_out.receiver}.{message_out.operation}; "
+                            operations += f"{message_out.receiver}_{message_out.operation}_"
                         intermediate_block = Block(
-                            label = f"do / {operations}",
+                            label = f"do_{operations}",
                             is_input = False,
                             output_ids = [output_counter]
                         )
@@ -67,7 +67,7 @@ class IO2UML:
                         block_transitions.append(BlockTransition(
                             from_block = initial_block,
                             to_block = intermediate_block,
-                            check = f"[check = {similar_transition.messages_out[0].return_value}]"
+                            check = f"[check_{similar_transition.messages_out[0].return_value}]"
                         ))
                         blocks.append(intermediate_block)
                 state_machines.append(CompositeStateStateMachine(
@@ -89,8 +89,10 @@ class IO2UML:
             action = transition.message_in
 
             composite_state = CompositeState(label=action, parent=transition.pre_state)
-            if not composite_state in states:
-                states.append(composite_state)
+            #if not composite_state in states:
+            #    states.append(composite_state)
+
+            states.append(composite_state)
 
             transitions.append(Transition(
                 pre_state=transition.pre_state,
@@ -124,8 +126,9 @@ class IO2UML:
             else:
                 plant_uml += f"hexagon {state.label}\n"
         for transition in self.state_machine.transitions:
-            # print(transition.pre_state)
+            print(transition.pre_state)
             # print(self.state_machine.states)
+            print(([state for state in self.state_machine.states if state.label == transition.pre_state]))
             arrow = "-->" if self.get_state(transition.pre_state).type == StateTypeEnum.simple else "+-->"
             return_value = transition.return_value if transition.return_value is not None \
                 else "return void" if transition.action == "" else ""
@@ -142,19 +145,20 @@ class IO2UML:
 
     def generate_composite_plant_uml(self, machine):
         plant_uml = "@startuml\n"
-        plant_uml += f"rectangle {machine.label} {{\n"
+        plant_uml += f'state {machine.label} {{\n'
         plant_uml += "state entry <<entryPoint>>\n"
         for block in machine.blocks:
-            plant_uml += f"rectangle {block.label}\n"
+            plant_uml += f'state {block.label}\n'
             if len(block.output_ids) == 1: # We assume that a state doesn't return more than one value
                 plant_uml += f"state exit{block.output_ids[0]} <<exitPoint>>\n"
-                plant_uml += f"{block.label} -> exit{block.output_ids[0]}"
+                plant_uml += f'{block.label} -> exit{block.output_ids[0]}\n'
             if block.is_input:
-                plant_uml += f"entry -> {block.label}"
+                plant_uml += f'entry -> {block.label}\n'
         plant_uml += "}\n"
         for transition in machine.transitions:
-            plant_uml += f"{transition.from_block.label} --> {transition.to_block.label} : {transition.check}\n"
+            plant_uml += f'{transition.from_block.label} --> {transition.to_block.label} : {transition.check}\n'
         plant_uml += "@enduml"
+        print(plant_uml)
         return plant_uml
 
     def visualize_composite_state_state_machines(self):

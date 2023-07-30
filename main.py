@@ -13,5 +13,11 @@ if __name__ == "__main__":
     projection = ObjectProjection(interaction_table).transform()
     behaviors = BehaviorExtraction(projection).transform()
     io_automata = GenerateIOAutomata(behaviors).io_automata()
-    uml = IO2UML("atm", io_automata["atm"]).visualize_uml()
+    uml = IO2UML("atm", io_automata["atm"])
+    for s in uml.state_machine.states:
+        print(f"\t{s}")
+    for t in uml.state_machine.transitions:
+        print(f"\t{t}")
+    uml.visualize_uml()
+    uml.visualize_composite_state_state_machines()
 

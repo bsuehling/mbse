@@ -24,11 +24,16 @@ class State(BaseModel, ABC):
 class SimpleState(State):
     type: StateTypeEnum = StateTypeEnum.simple
 
+    def __eq__(self, other):
+        return super.__eq__(self, other)
+
 class CompositeState(State):
     type: StateTypeEnum = StateTypeEnum.composite
     parent: str
 
     def __eq__(self, other):
+        if other.type != self.type:
+            return False
         return super.__eq__(self, other) and self.parent == other.parent
 
 class Transition(BaseModel):
