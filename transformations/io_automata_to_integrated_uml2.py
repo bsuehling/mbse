@@ -52,7 +52,7 @@ class IO2UML:
                     transition = io_similar_transitions[0]
                     operations: List[
                         BlockLabelElement
-                    ] = []  # TODO: Try to extract a function for this
+                    ] = []
                     for message_out in transition.messages_out:
                         operations.append(
                             BlockLabelElement(
@@ -69,9 +69,7 @@ class IO2UML:
                     )
                 else:
                     # We assume that the check only happens (if ever) in the first message-out
-                    # TODO: We assumed that the first message_outs in "similar" transitions have the same operation and receiver
-                    # TODO: We also assumed that when there are similar transitions, then there is at least one outgoing message
-
+                    # We assumed that the first message_outs in "similar" transitions have the same operation and receiver
                     msgs_out = io_similar_transitions[0].messages_out
                     if len(msgs_out) == 0:
                         check = BlockLabelElement(
@@ -239,7 +237,7 @@ class IO2UML:
 
     def visualize_uml(self, filepath):
         uml_text = self.generate_plant_uml()
-        output_path = f"{filepath}/state_machine.uml"  # TODO: Change this for different components
+        output_path = f"{filepath}/state_machine.uml"
         with open(output_path, "w") as file:
             file.write(uml_text)
         self.plantUML_server.processes_file(output_path)

@@ -7,7 +7,6 @@ from models.io_automata import IOautomat, OutMessage, Transition
 
 
 class GenerateIOAutomata:
-    # input Dict[obj, Dict[scenario, Behavior]]
     def __init__(self, input: Dict[str, Dict[str, Behavior]], initial_states):
         self._input = input
         self.initial_states = initial_states
