@@ -5,7 +5,7 @@ from plantuml import PlantUML
 
 from models.behavior import Behavior
 from models.io_automata import IOautomat
-from models.uml2 import *
+from models.uml import *
 
 
 class IO2UML:
@@ -37,7 +37,6 @@ class IO2UML:
 
     def _io_to_composite_state_state_machines(self) -> List[CompositeStateStateMachine]:
         io_states = self.io_automat.states
-        io_transitions = self.io_automat.transitions
         state_machines = []
         for state in io_states:
             for action in self._io_incoming_messages(state):
@@ -163,8 +162,6 @@ class IO2UML:
                     composite_state = CompositeState(
                         label=action, parent=transition.pre_state
                     )
-                    # if not composite_state in states:
-                    #    states.append(composite_state)
 
                     states.append(composite_state)
 
@@ -213,7 +210,7 @@ class IO2UML:
             else:
                 plant_uml += f"hexagon {state.label}\n"
         
-        plant_uml += "circle entry\n"
+        plant_uml += 'circle " " as entry\n'
         for s in self.initial_states:
             plant_uml += f"entry -> {s}\n"
 
@@ -277,7 +274,7 @@ class IO2UML:
             return aliasDict[str(s)]
 
         plant_uml += f"state {machine.label} {{\n"
-        plant_uml += "state entry <<entryPoint>>\n"
+        plant_uml += 'state " " as entry <<entryPoint>>\n'
         for block in machine.blocks:
             plant_uml += (
                 f"state {alias(block)} : do / \\n{self.block2decr(block.label)}\n"
@@ -297,7 +294,7 @@ class IO2UML:
 
     def visualize_composite_state_state_machines(self, filepath):
         state_machines = self.composite_state_state_machines
-        for idx, machine in enumerate(state_machines):
+        for machine in state_machines:
             uml_text = self.generate_composite_plant_uml(machine)
             output_path = f"{filepath}/composite_state_{machine.label}.uml"
             with open(output_path, "w") as file:

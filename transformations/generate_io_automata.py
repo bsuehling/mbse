@@ -69,7 +69,7 @@ class GenerateIOAutomata:
 
     def generate_plant_uml(self, automaton, initial_states):
         plant_uml = "@startuml\n"
-        plant_uml += "circle entry\n"
+        plant_uml += 'circle " " as entry\n'
 
         for state in automaton.states:
             plant_uml += f"rectangle {state}\n"
