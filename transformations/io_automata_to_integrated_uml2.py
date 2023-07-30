@@ -77,9 +77,7 @@ class IO2UML:
 
                     output_counter = 1
                     io_similar_transitions_copy = io_similar_transitions.copy()
-                    # print("io copy")
                     io_similar_transitions_copy.sort(key = lambda x: x.post_state)
-                    # print(io_similar_transitions_copy)
                     for similar_transition in io_similar_transitions_copy:
                         operations: List[BlockLabelElement] = []
                         operations.append(BlockLabelElement(
@@ -181,9 +179,6 @@ class IO2UML:
             else:
                 plant_uml += f"hexagon {state.label}\n"
         for transition in self.state_machine.transitions:
-            # print(transition.pre_state)
-            # print(self.state_machine.states)
-            # print(([state for state in self.state_machine.states if state.label == transition.pre_state]))
             arrow = "-->" if self.get_state(transition.pre_state).type == StateTypeEnum.simple else "+-->"
             return_value = transition.return_value if transition.return_value is not None \
                 else "return void" if transition.action == "" else ""
@@ -192,9 +187,9 @@ class IO2UML:
         plant_uml += "@enduml"
         return plant_uml
 
-    def visualize_uml(self):
+    def visualize_uml(self, filepath):
         uml_text = self.generate_plant_uml()
-        output_path = f"artefacts/{self.obj}_state_machine.uml" # TODO: Change this for different components
+        output_path = f"{filepath}/state_machine.uml" # TODO: Change this for different components
         with open(output_path, "w") as file:
             file.write(uml_text)
         self.plantUML_server.processes_file(output_path)
@@ -223,7 +218,6 @@ class IO2UML:
         
     def generate_composite_plant_uml(self, machine):
         plant_uml = "@startuml\n"
-        print(machine)
           
         aliasDict: Dict[str, str] = {}
         ctr = 1
@@ -247,14 +241,13 @@ class IO2UML:
         for transition in machine.transitions:
             plant_uml += f'{alias(transition.from_block)} --> {alias(transition.to_block)} : [check = {transition.check}]\n'
         plant_uml += "@enduml"
-        print(plant_uml)
         return plant_uml
 
-    def visualize_composite_state_state_machines(self):
+    def visualize_composite_state_state_machines(self, filepath):
         state_machines = self.composite_state_state_machines
         for idx, machine in enumerate(state_machines):
             uml_text = self.generate_composite_plant_uml(machine)
-            output_path = f"artefacts/{self.obj}_{machine.parent}_{machine.label}.uml"
+            output_path = f"{filepath}/composite_state_{machine.label}.uml"
             with open(output_path, "w") as file:
                 file.write(uml_text)
             self.plantUML_server.processes_file(output_path)

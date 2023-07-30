@@ -9,15 +9,15 @@ if __name__ == "__main__":
     artefacts = "artefacts"
     if not os.path.exists(artefacts):
         os.makedirs(artefacts)
+    
     interaction_table = XMLToTable(input_file).transform()
     projection = ObjectProjection(interaction_table).transform()
     behaviors = BehaviorExtraction(projection).transform()
     io_automata = GenerateIOAutomata(behaviors).io_automata()
-    uml = IO2UML("atm", io_automata["atm"])
-    for s in uml.state_machine.states:
-        print(f"\t{s}")
-    for t in uml.state_machine.transitions:
-        print(f"\t{t}")
-    uml.visualize_uml()
-    uml.visualize_composite_state_state_machines()
+    
+    for obj, automat in io_automata.items():
+        uml = IO2UML(obj, io_automata[obj])
+        os.makedirs(f"{artefacts}/{obj}", exist_ok=True)
+        uml.visualize_uml(f"{artefacts}/{obj}")
+        uml.visualize_composite_state_state_machines(f"{artefacts}/{obj}")
 
