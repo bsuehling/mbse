@@ -1,13 +1,17 @@
 from typing import Dict, List
 
+from plantuml import PlantUML
+
 from models.behavior import Behavior
 from models.io_automata import IOautomat, OutMessage, Transition
 
 
 class GenerateIOAutomata:
     # input Dict[obj, Dict[scenario, Behavior]]
-    def __init__(self, input: Dict[str, Dict[str, Behavior]]):
+    def __init__(self, input: Dict[str, Dict[str, Behavior]], initial_states):
         self._input = input
+        self.initial_states = initial_states
+        self.plantUML_server = PlantUML(url="http://www.plantuml.com/plantuml/img/")
 
     def io_automata(self):
         _io_automata: Dict[str, IOautomat] = {}
@@ -63,3 +67,32 @@ class GenerateIOAutomata:
                 {obj: IOautomat(states=_states, transitions=_transitions)}
             )
         return _io_automata_final
+
+    def generate_plant_uml(self, automaton, initial_states):
+        plant_uml = "@startuml\n"
+        plant_uml += "circle entry\n"
+
+        for state in automaton.states:
+            plant_uml += f"rectangle {state}\n"
+
+        for initial_state in initial_states:
+            plant_uml += f"entry -> {initial_state}\n"
+
+        for transition in automaton.transitions:
+            plant_uml += f"{transition.pre_state} --> {transition.post_state} : {transition.message_in} / "
+            for message_out in transition.messages_out:
+                plant_uml += f"\\n <{message_out.operation}, {message_out.receiver}, {message_out.return_value if message_out.return_value is not None else 'void'}> "
+            plant_uml += f" {transition.return_value if transition.return_value is not None else 'void'} \n"
+
+        plant_uml += "@enduml"
+
+        return plant_uml
+
+    def visualize(self, filepath):
+        automata = self.io_automata()
+        for object, automaton in automata.items():
+            uml_text = self.generate_plant_uml(automaton, self.initial_states[object])
+            output_path = f"{filepath}/io_automaton_{object}.uml"
+            with open(output_path, "w") as file:
+                file.write(uml_text)
+            self.plantUML_server.processes_file(output_path)

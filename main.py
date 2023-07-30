@@ -8,9 +8,13 @@ from transformations.io_automata_to_integrated_uml2 import IO2UML
 
 if __name__ == "__main__":
     input_file = "./input/MDD_Model.xml"
-    artefacts = "artefacts"
-    if not os.path.exists(artefacts):
-        os.makedirs(artefacts)
+    uml_artefacts_folder = "artefacts/uml"
+    io_automata_artefacts_folder = "artefacts/io_automata"
+
+    if not os.path.exists(uml_artefacts_folder):
+        os.makedirs(uml_artefacts_folder, exist_ok=True)
+    if not os.path.exists(io_automata_artefacts_folder):
+        os.makedirs(io_automata_artefacts_folder, exist_ok=True)
 
     interaction_table = XMLToTable(input_file).transform()
     projection = ObjectProjection(interaction_table).transform()
@@ -24,10 +28,12 @@ if __name__ == "__main__":
             init.append(beh[0].pre_state)
         initial_states.update({obj: list(set(init))})
     
-    io_automata = GenerateIOAutomata(behaviors).io_automata()
+    io_automata_transformation = GenerateIOAutomata(behaviors, initial_states)
+    io_automata = io_automata_transformation.io_automata()
+    io_automata_transformation.visualize(io_automata_artefacts_folder)
 
     for obj, automat in io_automata.items():
         uml = IO2UML(obj, io_automata[obj], initial_states[obj])
-        os.makedirs(f"{artefacts}/{obj}", exist_ok=True)
-        uml.visualize_uml(f"{artefacts}/{obj}")
-        uml.visualize_composite_state_state_machines(f"{artefacts}/{obj}")
+        os.makedirs(f"{uml_artefacts_folder}/{obj}", exist_ok=True)
+        uml.visualize_uml(f"{uml_artefacts_folder}/{obj}")
+        uml.visualize_composite_state_state_machines(f"{uml_artefacts_folder}/{obj}")
