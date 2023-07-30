@@ -19,22 +19,8 @@ def get_initial_states(behaviors) -> Dict[str, List[str]]:
 
     return initial_states
 
-
-if __name__ == "__main__":
-    input_file = "./input/MDD_Model.xml"
-    uml_artefacts_folder = "artefacts/uml"
-    io_automata_artefacts_folder = "artefacts/io_automata"
-
-    if not os.path.exists(uml_artefacts_folder):
-        os.makedirs(uml_artefacts_folder, exist_ok=True)
-    if not os.path.exists(io_automata_artefacts_folder):
-        os.makedirs(io_automata_artefacts_folder, exist_ok=True)
-
-    interaction_table = XMLToTable(input_file).transform()
-    projection = ObjectProjection(interaction_table).transform()
-    behaviors = BehaviorExtraction(projection).transform()
-
-    with open(os.path.join("artefacts", "behavior.txt"), "w") as file:
+def save_behaviors(behaviors, save_folder):
+    with open(os.path.join(save_folder, "behavior.txt"), "w") as file:
         original_stdout = sys.stdout
         sys.stdout = file
         for obj, behavior in behaviors.items():
@@ -47,14 +33,30 @@ if __name__ == "__main__":
         sys.stdout = original_stdout
 
 
+if __name__ == "__main__":
+    input_file = "./input/MDD_Model.xml"
+    artefacts_folder = "artefacts"
+    uml_artefacts_folder = f"{artefacts_folder}/uml"
+    io_automata_artefacts_folder = f"{artefacts_folder}/io_automata"
+
+    if not os.path.exists(uml_artefacts_folder):
+        os.makedirs(uml_artefacts_folder, exist_ok=True)
+    if not os.path.exists(io_automata_artefacts_folder):
+        os.makedirs(io_automata_artefacts_folder, exist_ok=True)
+
+    interaction_table = XMLToTable(input_file).transform()
+    projection = ObjectProjection(interaction_table).transform()
+    behaviors = BehaviorExtraction(projection).transform()
+
     initial_states = get_initial_states(behaviors)
+    save_behaviors(behaviors, artefacts_folder)
 
     io_automata_transformation = GenerateIOAutomata(behaviors, initial_states)
     io_automata = io_automata_transformation.io_automata()
     io_automata_transformation.visualize(io_automata_artefacts_folder)
 
     for obj, automat in io_automata.items():
-        uml = IO2UML(obj, io_automata[obj], initial_states[obj])
+        uml = IO2UML(io_automata[obj], initial_states[obj])
         os.makedirs(f"{uml_artefacts_folder}/{obj}", exist_ok=True)
         uml.visualize_uml(f"{uml_artefacts_folder}/{obj}")
         uml.visualize_composite_state_state_machines(f"{uml_artefacts_folder}/{obj}")
