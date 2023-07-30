@@ -237,17 +237,7 @@ class IO2UML:
             file.write(uml_text)
         self.plantUML_server.processes_file(output_path)
 
-    def blockLabel2str(self, blockLabel: BlockLabel):
-        elems = blockLabel.elems
-        if blockLabel.is_check:
-            return f"do_check_{elems[0].receiver}_{elems[0].operation}"
-        else:
-            ans = "do"
-            for e in elems:
-                ans += f"_{e.receiver}_{e.operation}"
-            return ans
-
-    def block2decr(self, blockLabel: BlockLabel):
+    def block_label_to_str(self, blockLabel: BlockLabel):
         elems = blockLabel.elems
         if blockLabel.is_check:
             return f"check := {elems[0].receiver}.{elems[0].operation}"
@@ -275,7 +265,7 @@ class IO2UML:
         plant_uml += 'state " " as entry <<entryPoint>>\n'
         for block in machine.blocks:
             plant_uml += (
-                f"state {alias(block)} : do / \\n{self.block2decr(block.label)}\n"
+                f"state {alias(block)} : do / \\n{self.block_label_to_str(block.label)}\n"
             )
             if (
                 len(block.output_ids) == 1
