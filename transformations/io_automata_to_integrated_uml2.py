@@ -52,11 +52,19 @@ class IO2UML:
                     # TODO: We assumed that the first message_outs in "similar" transitions have the same operation and receiver
                     # TODO: We also assumed that when there are similar transitions, then there is at least one outgoing message
 
-                    first_message = io_similar_transitions[0].messages_out[0]
-                    check = BlockLabelElement(
-                        operation=first_message.operation,
-                        receiver=first_message.receiver
-                    )
+                    
+                    msgs_out = io_similar_transitions[0].messages_out
+                    if len(msgs_out) == 0:
+                        check = BlockLabelElement(
+                            operation=io_similar_transitions[0].message_in,
+                            receiver=""
+                        )
+                    else:
+                        first_message = io_similar_transitions[0].messages_out[0]
+                        check = BlockLabelElement(
+                            operation=first_message.operation,
+                            receiver=first_message.receiver
+                        )
                     initial_block = Block(
                         label = BlockLabel(
                             is_check=True,
@@ -92,11 +100,18 @@ class IO2UML:
                             output_ids = [output_counter]
                         )
                         output_counter += 1
-                        block_transitions.append(BlockTransition(
-                            from_block = initial_block,
-                            to_block = intermediate_block,
-                            check = f"{similar_transition.messages_out[0].return_value}"
-                        ))
+                        if len(similar_transition.messages_out) == 0:
+                            block_transitions.append(BlockTransition(
+                                from_block = initial_block,
+                                to_block = intermediate_block,
+                                check = f"{similar_transition.return_value}"
+                            ))
+                        else:
+                            block_transitions.append(BlockTransition(
+                                from_block = initial_block,
+                                to_block = intermediate_block,
+                                check = f"{similar_transition.messages_out[0].return_value}"
+                            ))
                         blocks.append(intermediate_block)
                 state_machines.append(CompositeStateStateMachine(
                     label = state_machine_label,
