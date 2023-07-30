@@ -9,10 +9,9 @@ from models.uml import *
 
 
 class IO2UML:
-    def __init__(self, obj, input: IOautomat, initial_states: List[str]):
+    def __init__(self, input: IOautomat, initial_states: List[str]):
         self.initial_states = initial_states
         self.io_automat = input
-        self.obj = obj
         self.state_machine = self._io_2_state_machine()
         self.composite_state_state_machines = (
             self._io_to_composite_state_state_machines()
@@ -61,7 +60,7 @@ class IO2UML:
                         Block(
                             label=BlockLabel(is_check=False, elems=operations),
                             is_input=True,
-                            output_ids=[1],
+                            output_id=1,
                         )
                     )
                 else:
@@ -81,7 +80,7 @@ class IO2UML:
                     initial_block = Block(
                         label=BlockLabel(is_check=True, elems=[check]),
                         is_input=True,
-                        output_ids=[],
+                        output_id=None,
                     )
                     blocks.append(initial_block)
 
@@ -105,17 +104,17 @@ class IO2UML:
                                     receiver=message_out.receiver,
                                 )
                             )
-                        intermediate_block = Block(
+                        final_block = Block(
                             label=BlockLabel(is_check=False, elems=operations),
                             is_input=False,
-                            output_ids=[output_counter],
+                            output_id=output_counter,
                         )
                         output_counter += 1
                         if len(similar_transition.messages_out) == 0:
                             block_transitions.append(
                                 BlockTransition(
                                     from_block=initial_block,
-                                    to_block=intermediate_block,
+                                    to_block=final_block,
                                     check=f"{similar_transition.return_value}",
                                 )
                             )
@@ -123,11 +122,11 @@ class IO2UML:
                             block_transitions.append(
                                 BlockTransition(
                                     from_block=initial_block,
-                                    to_block=intermediate_block,
+                                    to_block=final_block,
                                     check=f"{similar_transition.messages_out[0].return_value}",
                                 )
                             )
-                        blocks.append(intermediate_block)
+                        blocks.append(final_block)
                 state_machines.append(
                     CompositeStateStateMachine(
                         label=state_machine_label,
@@ -267,11 +266,9 @@ class IO2UML:
             plant_uml += (
                 f"state {alias(block)} : do / \\n{self.block_label_to_str(block.label)}\n"
             )
-            if (
-                len(block.output_ids) == 1
-            ):  # We assume that a state doesn't return more than one value
-                plant_uml += f"state exit{block.output_ids[0]} <<exitPoint>>\n"
-                plant_uml += f"{alias(block)} -> exit{block.output_ids[0]}\n"
+            if block.output_id:
+                plant_uml += f"state exit{block.output_id} <<exitPoint>>\n"
+                plant_uml += f"{alias(block)} -> exit{block.output_id}\n"
             if block.is_input:
                 plant_uml += f"entry -> {alias(block)}\n"
         plant_uml += "}\n"

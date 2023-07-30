@@ -77,7 +77,7 @@ class BlockLabel(BaseModel):
 class Block(BaseModel):
     label: BlockLabel
     is_input: bool
-    output_ids: List[int]
+    output_id: Optional[int]
 
 
 class BlockTransition(BaseModel):
@@ -91,8 +91,3 @@ class CompositeStateStateMachine(BaseModel):
     parent: str
     blocks: List[Block]
     transitions: List[BlockTransition]
-
-
-class IntegratedUML(BaseModel):
-    state_machine: StateMachine
-    composite_states: List[CompositeStateStateMachine]
