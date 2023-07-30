@@ -44,6 +44,11 @@ class Transition(BaseModel):
     return_value: Optional[str]
     exit_id: Optional[int]
 
+    def __eq__(self, other):
+        return self.pre_state == other.pre_state and self.post_state == other.post_state \
+            and self.type == other.type and self.action == other.action and self.return_value == other.return_value \
+            and self.exit_id == other.exit_id 
+
 class StateMachine(BaseModel):
     states: List[State]
     transitions: List[Transition]

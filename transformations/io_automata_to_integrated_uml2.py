@@ -167,7 +167,7 @@ class IO2UML:
 
         return StateMachine(
             states=states,
-            transitions=transitions
+            transitions=[transition for idx, transition in enumerate(transitions) if transition not in transitions[:idx]]
         )
 
     def get_state(self, state_label):
@@ -187,7 +187,7 @@ class IO2UML:
             arrow = "-->" if self.get_state(transition.pre_state).type == StateTypeEnum.simple else "+-->"
             return_value = transition.return_value if transition.return_value is not None \
                 else "return void" if transition.action == "" else ""
-            exit_id = "" if transition.exit_id == None else f"exit{transition.exit_id} "
+            exit_id = "" if transition.exit_id == None else f"exit{transition.exit_id}"
             plant_uml += f"{transition.pre_state} {arrow} {transition.post_state} : {exit_id}{transition.action} / {return_value}\n"
         plant_uml += "@enduml"
         return plant_uml
@@ -209,21 +209,43 @@ class IO2UML:
                 ans+=f"_{e.receiver}_{e.operation}"
             return ans
 
+    def block2decr(self, blockLabel: BlockLabel):
+        elems = blockLabel.elems
+        if blockLabel.is_check:
+            return f"check := {elems[0].receiver}.{elems[0].operation}"
+        else:
+            ans = ""
+            for e in elems:
+                if e.receiver == "":
+                    continue
+                ans+=f"{e.receiver}.{e.operation}\\n"
+            return ans
+        
     def generate_composite_plant_uml(self, machine):
         plant_uml = "@startuml\n"
         print(machine)
+          
+        aliasDict: Dict[str, str] = {}
+        ctr = 1
+        for s in machine.blocks:
+            aliasDict.update({str(s): f"state_{ctr}"})
+            ctr += 1
+
+        def alias(s):
+            return aliasDict[str(s)]
+
         plant_uml += f'state {machine.label} {{\n'
         plant_uml += "state entry <<entryPoint>>\n"
         for block in machine.blocks:
-            plant_uml += f'state {self.blockLabel2str(block.label)}\n'
+            plant_uml += f'state {alias(block)} : do / \\n{self.block2decr(block.label)}\n'
             if len(block.output_ids) == 1: # We assume that a state doesn't return more than one value
                 plant_uml += f"state exit{block.output_ids[0]} <<exitPoint>>\n"
-                plant_uml += f'{self.blockLabel2str(block.label)} -> exit{block.output_ids[0]}\n'
+                plant_uml += f'{alias(block)} -> exit{block.output_ids[0]}\n'
             if block.is_input:
-                plant_uml += f'entry -> {self.blockLabel2str(block.label)}\n'
+                plant_uml += f'entry -> {alias(block)}\n'
         plant_uml += "}\n"
         for transition in machine.transitions:
-            plant_uml += f'{self.blockLabel2str(transition.from_block.label)} --> {self.blockLabel2str(transition.to_block.label)} : {transition.check}\n'
+            plant_uml += f'{alias(transition.from_block)} --> {alias(transition.to_block)} : [check = {transition.check}]\n'
         plant_uml += "@enduml"
         print(plant_uml)
         return plant_uml
