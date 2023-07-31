@@ -13,7 +13,9 @@ def get_initial_states(behaviors) -> Dict[str, List[str]]:
         init = []
         for _, beh in scenario.items():
             init.append(beh[0].pre_state)
+            break # very hacky work around, the assumption is wrong
         initial_states.update({obj: list(set(init))})
+
 
     return initial_states
 
