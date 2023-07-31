@@ -1,23 +1,23 @@
-from typing import Dict, List
-
 import os
+from typing import Dict, List
 
 from transformations import *
 from transformations.generate_io_automata import GenerateIOAutomata
 from transformations.io_automata_to_integrated_uml import IO2UML
 
+
 def get_initial_states(behaviors) -> Dict[str, List[str]]:
     initial_states: Dict[str, List[str]] = {}
-    
+
     for obj, scenario in behaviors.items():
         init = []
         for _, beh in scenario.items():
             init.append(beh[0].pre_state)
-            break # very hacky work around, the assumption is wrong
+            break  # very hacky work around, the assumption is wrong
         initial_states.update({obj: list(set(init))})
 
-
     return initial_states
+
 
 if __name__ == "__main__":
     input_file = "./input/MDD_Model.xml"
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     behaviors = BehaviorExtraction(projection).transform()
 
     initial_states = get_initial_states(behaviors)
-    
+
     io_automata_transformation = GenerateIOAutomata(behaviors, initial_states)
     io_automata = io_automata_transformation.io_automata()
     io_automata_transformation.visualize(io_automata_artefacts_folder)

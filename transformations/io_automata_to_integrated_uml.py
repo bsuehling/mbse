@@ -49,9 +49,7 @@ class IO2UML:
                 block_transitions = []
                 if len(io_similar_transitions) == 1:
                     transition = io_similar_transitions[0]
-                    operations: List[
-                        BlockLabelElement
-                    ] = []
+                    operations: List[BlockLabelElement] = []
                     for message_out in transition.messages_out:
                         operations.append(
                             BlockLabelElement(
@@ -209,7 +207,7 @@ class IO2UML:
                 plant_uml += f"rectangle {state.label}\n"
             else:
                 plant_uml += f"hexagon {state.label}\n"
-        
+
         plant_uml += 'circle " " as entry\n'
         for s in self.initial_states:
             plant_uml += f"entry -> {s}\n"
